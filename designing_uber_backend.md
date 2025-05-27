@@ -1,4 +1,3 @@
-
 # Designing Uber Backend
 Let's design a ride-sharing service like Uber, connecting a passenger who needs a ride with a driver who has a car.
 
@@ -102,8 +101,8 @@ To receive location updates from all active drivers, we get DriverID and their l
 The memory and bandwidth requirements can be easily handled by one server, but for scalability, performance, and fault tolerance, we should distribute DriverLocationHT onto multiple servers. We can distribute beased the DriverID to make the distribution completely random. Let's call the machines holding DriverlocationHt the Driver location servers.
 
 The servers will:
-1. As soon as they receive driver location update, broadcast that information to all interested customers.
-2. Notify the respective QuadTree server to refresh the driver's location. This happens every 15 seconds.
+- As soon as they receive driver location update, broadcast that information to all interested customers.
+- Notify the respective QuadTree server to refresh the driver's location. This happens every 15 seconds.
 
 
 ### Broadcasting driver's location to customers
@@ -167,9 +166,3 @@ We can rank search results not just by proximity but also by popularity or relev
 Let's assume we keep track of the overall ratings in our database and QuadTree. An aggregated number can represent this popularirt in our system. 
 
 For example, while searching for the top 10 drivers within a given radius, we can ask each partition of QuadTree to return the top 10 drivers with a maximum rating. The aggregator server can then determine the top 10 drivers among all drivers returned.
-
-
-
-```python
-
-```

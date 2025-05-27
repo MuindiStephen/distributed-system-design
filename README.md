@@ -6,24 +6,24 @@ A curated collection of approaches to creating large scale distributed systems d
 
 System Design Problems:
 
-1. [Design Instagram](designing_instagram.ipynb)
+1. [Design Instagram](designing_instagram.md)
 2. [Design Twitter](designing_twitter.md)
-3. [Design Twitter Search](designing_twitter_search.ipynb)
-4. [Design Instagram Feed](designing_instagram_feed.ipynb)
+3. [Design Twitter Search](designing_twitter_search.md)
+4. [Design Instagram Feed](designing_instagram_feed.md)
 5. [Design Youtube or Netflix](designing_youtube_or_netflix.md)
 6. [Design Uber or Lyft](designing_uber_backend.md)
 7. [Design a Typeahead Suggestion like Google Search](designing_typeahead_suggestion.md)
-8. [Design an API Rate Limiter](designing_api_rate_limiter.ipynb)
+8. [Design an API Rate Limiter](designing_api_rate_limiter.md)
 9. [Design an E-ticketing service like Ticketmaster](designing_ticketmaster.md)
-10. [Design a Web Crawler](designing_webcrawler.ipynb)
-11. [Design Cloud File Storage like Dropbox/GDrive](designing-cloud-storage.ipynb)
-12. [Distributed Logging](distributed_logging.ipynb)
+10. [Design a Web Crawler](designing_webcrawler.md)
+11. [Design Cloud File Storage like Dropbox/GDrive](designing-cloud-storage.md)
+12. [Distributed Logging](distributed_logging.md)
 
 &nbsp;
 
 Object Oriented Design Problems:
 
-1. [Design Amazon: Online Shopping System](OOP-design/designing_amazon_online_shopping_system.ipynb)
+1. [Design Amazon: Online Shopping System](OOP-design/designing_amazon_online_shopping_system.md)
 
 ## Step 0: Intro
 

@@ -34,11 +34,11 @@ Here are some scenarios to show the importance of Rate limiting our API/Services
 
 ## 2. Throttling Types
 
-* ***Hard Throttling*** – Number of API requests cannot exceed the throttle limit.
+- ***Hard Throttling*** – Number of API requests cannot exceed the throttle limit.
 
-* ***Soft Throttling*** – Set the API request limit to exceed by some percentage. E.g, if the rate-limit = 100 messages/minute, and 10% exceed-limit, our rate limiter will allow up to 110 messages per minute.
+- ***Soft Throttling*** – Set the API request limit to exceed by some percentage. E.g, if the rate-limit = 100 messages/minute, and 10% exceed-limit, our rate limiter will allow up to 110 messages per minute.
 
-* ***Dynamic Throttling (Priority throttling)*** – The number of requests can exceed the limit if the system has some free resources available. The system can progressively throttle requests based on some predefined priority. 
+- ***Dynamic Throttling (Priority throttling)*** – The number of requests can exceed the limit if the system has some free resources available. The system can progressively throttle requests based on some predefined priority. 
 
 ## 3. Algorithms used for Rate Limiting
 
@@ -229,7 +229,7 @@ Total memory = 1.6KB * 10 million => 16 GB
 ```
 
 
-# 8. Data Sharding and Caching
+## 8. Data Sharding and Caching
 We can shard by `UserID` to distribute user data across different partitions.
 
 For fault tolerance and replication we should use Consistent Hashing. Consistent hashing is a very useful strategy for distributed caching system and DHTs. It allows us to distribute data across a cluster in such a way that will minimize reorganization when nodes are added or removed (resizing). 
@@ -248,7 +248,7 @@ Sample response:
 
 
 
-# 9. Throttling Response
+## 9. Throttling Response
 We can return a 429 status code: Too Many Requests whenever the user exceeds the rate limit.
 
 | Header Name          | Description                                                                    |
@@ -266,15 +266,10 @@ RateLimit-Exceeded: 60
 Cache-Control: private
 Content-Type: application/json;charset=utf-8
 ```
-```json
-{
-  "error": {
-    "code": "ClientThrottled",
-    "message": "Client application is over its resource limit."
-  }
+```json
+{
+  "error": {
+    "code": "ClientThrottled",
+    "message": "Client application is over its resource limit."
+  }
 }
-
-
-```python
-
-```

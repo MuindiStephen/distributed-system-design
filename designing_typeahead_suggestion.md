@@ -1,4 +1,3 @@
-
 # Designing Typeahead Suggestion
 
 Typeahead is a real-time suggestion service which recommends terms to users as they enter text for searching.

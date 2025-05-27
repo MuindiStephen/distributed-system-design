@@ -19,5 +19,4 @@ jobs:
         pip install -r requirements.txt
     - name: Test notebooks with pytest
       run: |
-        pip install pytest nbval
         pytest --nbval
