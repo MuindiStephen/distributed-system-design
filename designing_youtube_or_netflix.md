@@ -113,7 +113,7 @@ At a high-level we would need the following components:
 - **Thumbnails generator:** To generate thumbnails for each video.
 - **Video and Thumbnail storage:** To store video and thumbnail files in some distributed file storage.
 - **User DB:** To store user's info e.g name, email, address, etc.
-- **Video metadata storage:** A metadata DB to store information about videos like title, its file path, uploading user, total views, likes, comments etc. 
+- **Video metadata storage:** A metadata DB to store information about videos like title, its file path, uploading user, total views, likes, comments etc.
 
 ![](images/hld_youtube.png)
 

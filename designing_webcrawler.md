@@ -1,6 +1,6 @@
 # Designing a Web Crawler
 
-Let's design a Web Crawler that will browse and download the World Wide Web. 
+Let's design a Web Crawler that will browse and download the World Wide Web.
 
 ## What's a Web Crawler?
 It's a software program which browses the WWW in a methodical and automated manner, collecting documents by recursively fetching links from a set of starting pages.
@@ -54,7 +54,7 @@ If we crawl 15B pages in 4 weeks, how many pages will we need to fetch per secon
 We don't want to go beyond 70% capacity of our storage system, so the total storage we will need is:
 
 ```text
-        1.5 petabytes / 0.7 ==> 2.14 Petabytes     
+        1.5 petabytes / 0.7 ==> 2.14 Petabytes
 ```
 
 ##  4. High Level Design
@@ -133,15 +133,15 @@ Once a new URL is added, we determine which sub-queue it belongs to by using the
 The size would be in the 100s of millions of URLs. Therefore, we need to store the URLs on disk. We can implement our queues in such a way that they have separate buffers for enqueuing and dequeuing. Enqueuing buffer, once filled, will be dumped to the disk. Dequeuing buffers will keep a cache of URLs that need to be visited; periodically reading from the disk to fill the buffer.
 
 #### b. The Fetcher Module
-This will download the document corresponding to a given URL using the appropriate network protocol like HTTP. Webmasters create a `robot.txt` to make certain parts of the websites off limits for the crawler. 
-To avoid downloading this text file on every request, our HTTP protocol module can maintain a cache mapping host-names to their robot's exclusion rules. 
+This will download the document corresponding to a given URL using the appropriate network protocol like HTTP. Webmasters create a `robot.txt` to make certain parts of the websites off limits for the crawler.
+To avoid downloading this text file on every request, our HTTP protocol module can maintain a cache mapping host-names to their robot's exclusion rules.
 
 #### c. Document input steam
 We cache the document locally using DIS to avoid downloading the document multiple times.
 
 A DIS is an input stream that caches the doc's entire contents in memory. It also provides methods to re-read the document. Larger documents can be temporarily written to a backing file.
 
-Each worker will have a DIS, which it reuses from document to document. After extracting a URL from the frontier, the worker passes that URL to the relevant protocol module (in our case, for HTTP) which initializes the DIS from a network connection to contain the document's contents. The worker then passes the DIS to all relevant processing modules. 
+Each worker will have a DIS, which it reuses from document to document. After extracting a URL from the frontier, the worker passes that URL to the relevant protocol module (in our case, for HTTP) which initializes the DIS from a network connection to contain the document's contents. The worker then passes the DIS to all relevant processing modules.
 
 #### d. Document Dedupe test
 To prevent processing a doc more than once, we perform a dedupe test on each doc to remove duplication.
@@ -153,13 +153,13 @@ We need to keep a unique set containing checksums of all previously process docu
 ```text
         15B * 8 bytes => 120 GB
 ```
-We can have a small LRU cache on each server with everything backed by persistent storage. 
+We can have a small LRU cache on each server with everything backed by persistent storage.
 
 Steps:
 - Check if the checksum is present in the cache.
 - If not, check if the checksum is in the back storage.
 - If found, ignore the document.
-- Otherwise, add the checksum to the cache and back storage. 
+- Otherwise, add the checksum to the cache and back storage.
 
 #### e. URL filters
 URL filtering mechanism provides a customizable way to control the set of URLs that are downloaded. We can define filters to restrict URLs by domain, prefix or protocol type.

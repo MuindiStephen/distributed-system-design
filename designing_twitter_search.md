@@ -14,9 +14,9 @@ We'll design a service that can effectively store and query user tweets.
 
 ```
     400 million new tweets each day,
-    Each tweet is on average 300 bytes 
+    Each tweet is on average 300 bytes
     400M * 300 =>  120GB/day
-    
+
     Total storage per second:
         120 GB / (24 hours / 3600 seconds)  ~= 1.38MB/second
 ```
@@ -50,14 +50,14 @@ Each result entry can have the user ID & name, tweet text, tweet ID, creation ti
 5 year plan
 ```
         120 GB/day * 365 days * 5 years ~= 200TB
-        
+
 ```
 
 We never want to be more than 80% full at any time, so we'll need approximately 250TB storage. Assuming we also need to keep an extra copy for fault tolerance, then, our total storage will be 500 TB.
 
 Assuming modern servers store up to 5TB of data, we'd need 100 such servers to hold all the data for the next 5 years.
 
-Let's start with simplistic design where we store tweets in a PostgreSQL DB. Assume a table with two columns: TweetID, and TweetText. 
+Let's start with simplistic design where we store tweets in a PostgreSQL DB. Assume a table with two columns: TweetID, and TweetText.
 Partitioning can be based on TweetID. If our TweetIDs are unique system wide, we can define a hash function that can map a TweetID to a storage server where we can store that tweet object.
 
 #### How can we create system wide unique TweetIDs?
@@ -78,15 +78,15 @@ Assume:
 
 ```
         If we keep our index in memory, we need:
-        
+
         500K * 5 => 2.5 MB
 ```
 
 Assume:
-    - We keep the index in memory for all tweets from our last two years. 
+    - We keep the index in memory for all tweets from our last two years.
 ```
    Since we'll get 730 Billion tweets in the next 5 years,
-   
+
    292Billion (2 year tweets) * 5 => 1460 GB
 ```
 
@@ -96,7 +96,7 @@ Assume:
     - Average of 40 words in each tweet,
     - 15 words will need indexing in each tweet, since we won't be indexing prepositions and other small words (the, in, an, and)
 
-> This means that each TweetID will be stored 15 times in our index. 
+> This means that each TweetID will be stored 15 times in our index.
 
 so total memory we will need to store our index:
 ```
@@ -119,20 +119,20 @@ To recover from this, we can repartition our data or use [Consistent Hashing](ht
 
 #### Sharding based on tweet object
 While storing, we will pass the TweetID to our hash function to find the server and index all words of the tweet on that server.
-While querying for a particular word, we'll query all servers, and each server will return a set of TweetIDs. A centralized server will aggregate these results to return them to the user. 
+While querying for a particular word, we'll query all servers, and each server will return a set of TweetIDs. A centralized server will aggregate these results to return them to the user.
 
 ![](images/sharding_based_on_tweet_object.png)
 
 ## 6. Fault Tolerance
 We can have a secondary replica of each server and if the primary one dies, it can take control after the failover.
-Both primary and secondary servers will have the same copy of the index. 
+Both primary and secondary servers will have the same copy of the index.
 
 How can we efficiently retrieve a mapping between tweets and the index server? We have to build a reverse index that will map all the tweetID to their index server. We'll keep this in the Index-Builder server.
 
 - build a Hashtable, where key = index server number and value = HashSet containing all TweetIDs being kept at that index server.
 - A HashSet will help us to add/remove tweets from our index quickly.
 
-So whenever an index server has to rebuild itself, it can simply ask the Index-Builder server for all tweets it needs to store and then fetch those tweets to build the index. We should also have a replica of the Index-builder server for fault tolerance. 
+So whenever an index server has to rebuild itself, it can simply ask the Index-Builder server for all tweets it needs to store and then fetch those tweets to build the index. We should also have a replica of the Index-builder server for fault tolerance.
 
 ## 7. Caching
 We can introduce a cache server in front of our DB. We can also use Memcached, which can store all hot tweets in memory. App servers before hitting the backend DB, can quickly check if the cache has that tweet. Based on clients' usage patterns, we can adjust how many cache servers we need. For cache eviction policy, Least Recently Used (LRU) seems suitable.

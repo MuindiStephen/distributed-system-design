@@ -8,18 +8,18 @@ In this architecture, logs are accumulated in each machine running the microserv
 
 ## Understanding the system
 ### Restrain Log Size
-At any given time, the distributed system logs hundreds of concurrent messages. 
+At any given time, the distributed system logs hundreds of concurrent messages.
 The number of logs increases over time. But, not all logs are important enough to be logged.
 To solve this, logs have to be structured. We need to decide what to log into the system on the application or logging level.
 
 ### Log sampling
 Storage and processing resources is a constraint. We must determine which messages we should log into the system so as to control volume of logs generated.
 
-High-throughput systems will emit lots of messages from the same set of events. Instead of logging all the messages, we can use a sampler service that only logs a smaller set of messages from a larger chunk. The sampler service can use various sampling algorithms such as adaptive and priority sampling to log events. For large systems with thousands of microservices and billions of events per seconds, an appropriate 
+High-throughput systems will emit lots of messages from the same set of events. Instead of logging all the messages, we can use a sampler service that only logs a smaller set of messages from a larger chunk. The sampler service can use various sampling algorithms such as adaptive and priority sampling to log events. For large systems with thousands of microservices and billions of events per seconds, an appropriate
 
 ### Structured logging
 The first benefit of structured logs is better interoperability between log readers and writers.
-Use structured logging to make the job of log processing system easier. 
+Use structured logging to make the job of log processing system easier.
 
 ### Categorization
 The following severity levels are commonly used in logging:
@@ -82,7 +82,7 @@ This API call writes the log message against against a unique key.
 
 ![](images/distributed_logging_design.png)
 
-## Component Design 
+## Component Design
 
 ### Logging at Various Levels in a Server
 In a server environment, logging occurs across various services and application, each producing logs crucial for monitoring and troubleshooting.
@@ -108,13 +108,13 @@ Another crucial component therefore is to have an expiration checker. It will ve
 
 ### Data Center Level
 All servers in the data center transmit logs to a publish-subscribe architecture.
-By utilizing a horizontally-scalable pub-sub framework, we can effectively manager large log volumes. 
+By utilizing a horizontally-scalable pub-sub framework, we can effectively manager large log volumes.
 
 Implementing multiple pub-sub instance within each data center enhances scalability and prevents throughput limitations and bottlenecks. Subsequently, the pub-sub system routes the log data to blob storage.
 
 ![](images/distributed_logging_datacenter_level.png)
 
-Now, data in the pub-sub system is temporary and get deleted after a few days before being moved to archival storage. 
+Now, data in the pub-sub system is temporary and get deleted after a few days before being moved to archival storage.
 However, while the data is still present in the pub-sub system, we can utilize it using the following services:
 - **Alerts Service:** This service identifies alerts and errors and notifies the appropriate stakeholders if a critical error is detected, or sends a message to a monitoring tool, ensuring timely awareness of important alerts. The service will also monitor logs for suspicious activities or security incidents, triggering alerts or automated responses to mitigate threats.
 - **Analytics service:** This service analyzes trends and patterns in the logged data to provide insights into system perf, user behavior, or operational metrics.

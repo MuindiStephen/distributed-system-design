@@ -123,7 +123,7 @@ We can try storing a user's data on one server. While storing:
 
 Issues:
 - What if a user becomes hot? There will be lots of queries on the server holding that user. This high load will affect the service's performance.
-- Over time, some users will have more data compared to others. Maintaining a uniform distribution of growing data is quite difficult. 
+- Over time, some users will have more data compared to others. Maintaining a uniform distribution of growing data is quite difficult.
 
 #### Sharding based on TweetID
 - Hash function maps each TweetID to a random server where we store that tweet.

@@ -10,7 +10,7 @@ A feed is a constantly updating scrollable list of posts, photos, videos, and st
 - Feeds are generated from the posts belonging to the pages and people the user follows.
 - The service should support appending new posts as they arrive to the feed for all active users
 
-### Non-functional requirements 
+### Non-functional requirements
 - The system should be able to generate a user's newsfeed in real-time - maximum latency seen by the end user should be about 2s.
 
 ## 2. Capacity Estimation and Constraints
@@ -21,11 +21,11 @@ Assume on average a user has 300 friends and follows 200 pages.
 ```text
 Per day: 200M * 5 => 1B requests
 
-Per second:   1B / 86400 sec => 11500 reqs/sec 
+Per second:   1B / 86400 sec => 11500 reqs/sec
 ```
 
-**Storage estimates:** Assume we have on average 500 posts for each user's feed that we want to keep in memory for fast fetching. 
-For simplicity, let's also assume an average photo file size posted would be about 200KB. This means we need about 200KB X 500 = 10 MB per user. 
+**Storage estimates:** Assume we have on average 500 posts for each user's feed that we want to keep in memory for fast fetching.
+For simplicity, let's also assume an average photo file size posted would be about 200KB. This means we need about 200KB X 500 = 10 MB per user.
 To store all this data for all active users, we'll need:
 
 ```text
@@ -52,17 +52,17 @@ getUserFeed(
     exclude_replies  # (Optional) Prevents replies from appearing in the results.
 ```
 
-**Returns:** (JSON) object containing a list of feed items. 
+**Returns:** (JSON) object containing a list of feed items.
 
 ## 4. Database Design
-There are three major objects: User, Entity (Business Accounts, Brands, Pages etc) and Post (A feed item). 
+There are three major objects: User, Entity (Business Accounts, Brands, Pages etc) and Post (A feed item).
     * A user follows entities and other users.
     * Users and entities can both post a Post which can contain text, images, or videos
-    * Each Post has a UserID of the user who created it. 
+    * Each Post has a UserID of the user who created it.
     * For simplicity, let's assume only users can create a post.
     * A Post can optionally have an EntityID that points to the page or business entity where the post was created.
 
-If we use a relational DB, we can model two relations: User-to-Entity and Post-to-Media relation. Since each user can be friends with many people and follow a lot of entities, we can store this relation in a separate table. 
+If we use a relational DB, we can model two relations: User-to-Entity and Post-to-Media relation. Since each user can be friends with many people and follow a lot of entities, we can store this relation in a separate table.
 
 | Users |                      |
 |:----:|:-----------------------|
@@ -144,7 +144,7 @@ Whenever our system receives a request to generate a feed for a user, we'll perf
     6. On front-end, when the user reaches the end of the loaded feed, fetch the next posts from the cache server.
     7. Periodically rank and add new posts to the user's feed.
     8. Notify user that there are new posts
-    
+
 #### Feed Publishing
 When the user loads her feed, she has request and pull posts from the server. When she reaches the end of her current feed, the server can push new posts.
 
@@ -170,16 +170,16 @@ SELECT PostID FROM Post WHERE UserID IN
     UNION
 SELECT PostID from Post WHERE EntityID IN
     (SELECT EntityID FROM UserFollow WHERE UserID = <user_id> AND type = 1) -- entity
-ORDER BY CreatedAt DESC 
+ORDER BY CreatedAt DESC
 LIMIT 100
 ~~~
-We want to avoid a direct query to the DB due to high latency. 
+We want to avoid a direct query to the DB due to high latency.
 
 We also want to avoid generating the feed when a user loads the page because it will be slow and have a high latency.
 
 Also, the server notifying about new posts to user with lots of followers could lead to heavy loads. To improve on all this, we can pre-generate the feed and store it in memory.
 
-### Offline generation 
+### Offline generation
 We can have severs dedicated to continuously generate feeds and store in memory. When a user requests for the new posts, we can simply serve it from the stored location. Therefore a user's feed is compiled not on load but on a regular basis and returned to users whenever they request it.
 
 
@@ -187,7 +187,7 @@ When the servers need to generate feed for a user, we first query to see last ti
 
 We can store this data in a hash table where key = UserID and value is:
 ```c
-Struct { 
+Struct {
     LinkedHashMap <PostID, Post> posts;
     DateTime lastGenerated;
 }
@@ -211,11 +211,11 @@ The process of pushing a post to all followers is call **fanout**.
 
 Two approaches to publishing:
 1. **Pull model (Fanout on load):** Clients pull data either on intervals or manually when needed. The problem with this approach is
-    
+
     a. New data might not be shown to users until they do a pull request
-    
+
     b. Most of the time pulls return empty responses: a wasted resource that could have been avoided.
-    
+
 2. **Push model (Fanout on write):** Immediately push a post to all followers once a user posts it. Advantage here is you don't need to iterate through your friends list to get their feeds, thus significantly reducing read operations. Users have to maintain a long-poll request with the server for receiving updates. A possible problem with this approach is when a celeb user has millions of followers, the server has to push updates to a lot of people.
 
 3. **Hybrid:** We can combine push and pull models. We stop pushing posts from celeb users with lots of followers. We can let their followers pull updates. By doing this, we can save a huge number of fanout resources. Alternatively, we can limit the push fanout to only followers who are online.
@@ -229,32 +229,32 @@ We can notify the users on desktop where data usage is cheap. For mobile devices
 To rank posts in a newsfeed, we can use creation time of the posts. However today's
 ranking algorithms are doing more to ensure important posts are ranked higher.
 
-The idea is to select key **features** that make a post important, 
+The idea is to select key **features** that make a post important,
 combining them and calculating the final ranking score.
 
 These features include:
 * creation time
 * number of likes
 * number of comments
-* number of shares, 
+* number of shares,
 * time of the updates
 
-We can also check the effectiveness of the ranking system by evaluating if it has increased user retention and add revenue etc. 
+We can also check the effectiveness of the ranking system by evaluating if it has increased user retention and add revenue etc.
 
 
 
 ## 8. Data Partitioning
 #### a. Sharding Posts and metadata
-Since we have a huge number of new posts every day and our read load is extremely high, we need to distribute data across multiple machines for better read/write efficiency. 
+Since we have a huge number of new posts every day and our read load is extremely high, we need to distribute data across multiple machines for better read/write efficiency.
 
 #### Sharding based on UserID
 We can try storing a user's data on one server. While storing:
 - Pass a UserID to our hash function that will map the user to a DB server where we'll store all of their data.
-- While querying for their data, we can ask the hash function where to find it and read it from there. 
+- While querying for their data, we can ask the hash function where to find it and read it from there.
 
 Issues:
 1. What if a user is IG famous? There will be lots of queries on the server holding that user. This high load will affect the service's performance.
-2. Over time, some users will have more data compared to others. Maintaining a uniform distribution of growing data across servers is quite difficult. 
+2. Over time, some users will have more data compared to others. Maintaining a uniform distribution of growing data across servers is quite difficult.
 
 #### Sharding based on PostID
 A hash function maps each PostID to a random server where we can store that post.
@@ -280,7 +280,7 @@ Issues:
 
 #### Sharding by PostID + Post creation time
 Each PostID should be universally unique and contain a timestamp.
-We can use epoch time for this. 
+We can use epoch time for this.
 
 ![](images/twitter_epoch.png)
 

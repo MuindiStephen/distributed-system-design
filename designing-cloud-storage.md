@@ -29,11 +29,11 @@ What do we want to achieve from a cloud storage system?
 ```python
 * Assume: 100 million users, 20 million DAU (daily active users)
 * Assume: Each user has on average two devices
-* Assume: Each user has on average about 100 files/photos/videos, we have 
+* Assume: Each user has on average about 100 files/photos/videos, we have
 
 Total files => 100,000,000 users * 100 files = 10 billion files
 
-* Assume: The average file size => 100KB, Total storage would be: 
+* Assume: The average file size => 100KB, Total storage would be:
         0.1MB * 10B files => 1 PB(Petabyte)
 ```
 
@@ -54,7 +54,7 @@ The user will have a folder as their workplace on their device. Any file/photo/f
 The major components of the system are as follows:
 
 ### a. Client
-The client monitors the workspace folder on the user's device and syncs changes to the remote cloud storage. 
+The client monitors the workspace folder on the user's device and syncs changes to the remote cloud storage.
 The main operations for the client are:
 1. Upload and download files
 2. Detect file changes in workspace folder
@@ -71,14 +71,14 @@ We should also keep a record of each file and the chunks that make up that file 
 A copy of metadata can also be kept with the client to enable offline updates and save round trips to update the remote metadata.
 
 #### Syncing with other clients
-We can use HTTP long polling to request info from the server. If the server has no new data for this client, instead of sending an empty response, it holds the request open and waits for response information to become available. Once new info is available, the server immediately sends a HTTP response to the client, completing the open request. 
+We can use HTTP long polling to request info from the server. If the server has no new data for this client, instead of sending an empty response, it holds the request open and waits for response information to become available. Once new info is available, the server immediately sends a HTTP response to the client, completing the open request.
 
 #### Major parts of the Client
 ![](images/designing_cloud_client.png)
 
 1. **Internal Metadata DB:** to keep track of all files, chunks, versions, and locations in the file system.
 2. **Chunker:** will split files into chunks, and reconstruct a file from its chunks.
-3. **Watcher:** will monitor workspace folder and notify the indexer of user action (e.g CRUD operations), as well as listen for incoming sync changes broadcasted by `Sync Service`. 
+3. **Watcher:** will monitor workspace folder and notify the indexer of user action (e.g CRUD operations), as well as listen for incoming sync changes broadcasted by `Sync Service`.
 4. **Indexer:** will process events from the watcher and update the client DB with necessary chunk/update information on files. Once chunks are synced to the cloud, the indexer can communicated with `remote Sync Service` to broadcast changes to other clients and update the `Remote Metadata DB`.
 
 On client communication frequency:
@@ -86,8 +86,8 @@ On client communication frequency:
 
 
 ### b. Metadata DB
-The Metadata database can be a relational database like MySQL or a NoSQL DB like DynamoDB. 
-The Sync Service should be able to provide a consistent view of the files through a DB, especially if the file is being edited by more than one user. 
+The Metadata database can be a relational database like MySQL or a NoSQL DB like DynamoDB.
+The Sync Service should be able to provide a consistent view of the files through a DB, especially if the file is being edited by more than one user.
 
 If we go with NoSQL for its scalability and performance, we can support ACID properties programmatically in the logic of our Sync Service.
 
@@ -100,12 +100,12 @@ The objects to be saved in the Metadata NoSQL DB are as follows:
 
 
 ### c. Sync Service
-This component will process file updates made by a client and apply changes to other subscribed clients. 
+This component will process file updates made by a client and apply changes to other subscribed clients.
 It will sync local DB for the client with the info store in the remote Metadata DB.
 
 **Consistency and reliability:** When the Sync Service receives an update request, has a verification process. This process first checks with the Metadata DB for consistency before and proceeding with the update, ensuring data integrity. This step helps prevent conflicts and inconsistencies that could come about from concurrent updates from multiple clients.
 
-**Efficient Data Transfer:** By transmitting only the diffs between file versions instead of the entire file, bandwidth consumption and cloud data storage usage are minimized. This approach is benefitial especially for large files and frequent update scenarios. 
+**Efficient Data Transfer:** By transmitting only the diffs between file versions instead of the entire file, bandwidth consumption and cloud data storage usage are minimized. This approach is benefitial especially for large files and frequent update scenarios.
 
 **Optimized storage:** The server and clients can calculate a hash using a collision resistant alogorithm (SHAs, Checksums or even Merkle trees) to see whether to update a copy of a chunk or not. On the server, if we already have a chunk with a similar hash, we don't need to create another copy, we can use the same chunk. The sync service will intelligently identify and reuse existing chunks, reducing redundancy and conversing storage space
 
@@ -117,7 +117,7 @@ Multiple Sync Service instances can receive requests from a global request queue
 ### d. Message Queuing Service
 This component supports asynchronous communication between client and Sync Service, and efficiently store any number of messages in a highly available, reliable and scalable queue.
 
-The service will have two queues: 
+The service will have two queues:
 1. **A Request Queue:** is a global queue which will receive client's request to update the Metadata DB.
 From there, the Sync Service will take the message to update metadata.
 
@@ -142,14 +142,14 @@ Two ways to do this:
 
 a. **In-line deduplication:** do hash calculations in real-time as clients enter the data on the device. If an existing chunk has the same hash as a new chunk, we store a reference to the existing chunk as metadata. This prevents us from making a full copy of the chunk, saving on network bandwidth and storage usage.
 
-b. **Post-process deduplication:** store new chunks and later some process analyzes the data looking for duplicated chunks. The benefit here is that clients don't need to wait for hash lookups to complete storing data. This ensures there's no degradation in storage performance. The drawback is that duplicate data will consume bandwidth, and we will also unnecessarily store it, but only for a short time. 
+b. **Post-process deduplication:** store new chunks and later some process analyzes the data looking for duplicated chunks. The benefit here is that clients don't need to wait for hash lookups to complete storing data. This ensures there's no degradation in storage performance. The drawback is that duplicate data will consume bandwidth, and we will also unnecessarily store it, but only for a short time.
 
 ## 7. Partitioning Metadata DB
 To scale our metadata DB, we can partition it using various partition schemes:
 
 We can use Range-based partitioning where we store files/chunks in separate partitions based on the first letter of the file path. But, later this might lead to unbalanced servers, where partitions that start with frequently occuring letters will have more files than those that dont.
 
-For Hash-based partitioning, we can take a hash of the object and use it to determine the DB partition to save the object. A hash on the `FileID` of the File object we are storing can be used to determine the partition to store the object. 
+For Hash-based partitioning, we can take a hash of the object and use it to determine the DB partition to save the object. A hash on the `FileID` of the File object we are storing can be used to determine the partition to store the object.
 
 The hashing function will distribute objects into different partitions by mapping them to a number between `[1,...,256]` and this number would be the partition we store the object. And to prevent overloading some partitions,  we can use `Constitent Hashing`.
 
@@ -160,7 +160,7 @@ We can add the load balancer at two places:
 
 ![](images/designing_cloud_detailed.png)
 
-We can have a round robin load balancer that distributes incoming requests equally among backend servers. But if a server is overloaded or slow, the LB will not stop sending new requests to that server. To handle this, a more intelligent LB strategy can be implemented such that it queries for a backend server load before it sends traffic to that server, and adjusts traffic to a server based on its current server load. 
+We can have a round robin load balancer that distributes incoming requests equally among backend servers. But if a server is overloaded or slow, the LB will not stop sending new requests to that server. To handle this, a more intelligent LB strategy can be implemented such that it queries for a backend server load before it sends traffic to that server, and adjusts traffic to a server based on its current server load.
 
 ## 9. Caching
 To deal with hot frequently used files/chunks, we can create a cache for block storage. We'll store whole chunks

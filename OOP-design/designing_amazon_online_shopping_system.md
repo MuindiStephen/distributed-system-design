@@ -35,7 +35,7 @@ Top use cases therefore include:
 4. Checkout to buy a product item in the shopping cart.
 5. Make a payment to place an order.
 6. Add a new product category.
-7. Send notifications about order shipment updates to members. 
+7. Send notifications about order shipment updates to members.
 
 
 ### Code
@@ -55,14 +55,14 @@ class OrderStatus(Enum):
 
 class ShipmentStatus(Enum):
     PENDING, SHIPPED, DELIVERED, ON_HOLD = 1, 2, 3, 4
-    
+
 class PaymentStatus(Enum):
     UNPAID, PENDING, COMPLETED, FILLED, DECLINED = 1, 2, 3, 4, 5
     CANCELLED, ABANDONED, SETTLING, SETTLED, REFUNDED = 6, 7, 8, 9, 10
-    
+
 ```
 
-#### Account, Customer, Admin and Guest classes 
+#### Account, Customer, Admin and Guest classes
 These classes represent different people that interact with the system.
 
 
@@ -71,13 +71,13 @@ from abc import ABC, abstractmethod
 
 
 class Account:
-    """Python strives to adhere to Uniform Access Principle. 
-    
-    So there's no need for getter and setter methods. 
+    """Python strives to adhere to Uniform Access Principle.
+
+    So there's no need for getter and setter methods.
     """
-    
+
     def __init__(self, username, password, name, email, phone, shipping_address, status:AccountStatus):
-        # "private" attributes 
+        # "private" attributes
         self._username = username
         self._password = password
         self._email = email
@@ -86,13 +86,13 @@ class Account:
         self._status = status.ACTIVE
         self._credit_cards = []
         self._bank_accounts = []
-        
+
     def add_product(self, product):
         pass
-    
+
     def add_product_review(self, review):
         pass
-    
+
     def reset_password(self):
         pass
 
@@ -101,16 +101,16 @@ class Customer(ABC):
     def __init__(self, cart, order):
         self._cart = cart
         self._order = order
-    
+
     def get_shopping_cart(self):
         return self.cart
-    
+
     def add_item_to_cart(self, item):
         raise NotImplementedError
-    
+
     def remove_item_from_cart(self, item):
         raise NotImplementedError
-    
+
 
 class Guest(Customer):
     def register_account(self):
@@ -120,10 +120,10 @@ class Guest(Customer):
 class Member(Customer):
     def __init__(self, account:Account):
         self._account = account
-        
+
     def place_order(self, order):
         pass
-    
+
 ```
 
 
@@ -150,16 +150,16 @@ class Product:
         self._price = price
         self._category = category
         self._available_item_count = 0
-        
+
     def update_price(self, new_price):
         self._price = new_price
-    
-    
+
+
 class ProductCategory:
     def __init__(self, name, description):
         self._name = name
         self._description = description
-    
+
 
 class ProductReview:
     def __init__(self, rating, review, reviewer):
@@ -179,12 +179,12 @@ class Item:
         self._item_id = item_id
         self._quantity = quantity
         self._price = price
-    
+
     def update_quantity(self, quantity):
         self._quantity = quantity
-        
+
     def __repr__(self):
-        return f"ItemID:<{self._item_id}>" 
+        return f"ItemID:<{self._item_id}>"
 
 
 class ShoppingCart:
@@ -192,13 +192,13 @@ class ShoppingCart:
     """
     def __init__(self):
         self._items = []
-    
+
     def add_item(self, item):
         self._items.append(item)
-    
+
     def remove_item(self, item):
         self._items.remove(item)
-    
+
     def update_item_quantity(self, item, quantity):
         pass
 
@@ -234,7 +234,7 @@ class OrderLog:
         self._order_number = order_number
         self._creation_date = datetime.date.today()
         self._status = status
-        
+
 
 class Order:
     def __init__(self, order_number, status=OrderStatus.PENDING):
@@ -242,13 +242,13 @@ class Order:
         self._status = status
         self._order_date = datetime.date.today()
         self._order_log = []
-    
+
     def send_for_shipment(self):
         pass
-    
+
     def make_payment(self, payment):
         pass
-    
+
     def add_order_log(self, order_log):
         pass
 ```
@@ -274,12 +274,12 @@ class Shipment:
         self._shipment_date = datetime.date.today()
         self._eta = eta
         self._shipment_logs = shipment_logs
-        
+
 
 class Notification(ABC):
     def __init__(self, notification_id, content):
         self._notification_id = notification_id
         self._created_on = datetime.datetime.now()
         self._content = content
-        
+
 ```
