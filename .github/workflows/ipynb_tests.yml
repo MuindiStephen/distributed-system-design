@@ -19,4 +19,5 @@ jobs:
         pip install -r requirements.txt
     - name: Test notebooks with pytest
       run: |
+        pip install pytest nbval # This line is being added back
         pytest --nbval
