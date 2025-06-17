@@ -22,6 +22,7 @@ A movie ticket booking system provides its customer the ability to purchase thea
 - The system has financial transactions, meaning it should be secure and the DB should be ACID compliant.
 - Assume traffic will spike on popular/much-awaited movie releases and the seats would fill up pretty fast, so the service should be highly scalable and highly available to keep up with the surge in traffic.
 
+
 ### Design Considerations
 1. Assume that our service doesn't require authentication.
 2. No handling of partial ticket orders. Either users get all the tickets they want or they get nothing.
@@ -31,23 +32,26 @@ A movie ticket booking system provides its customer the ability to purchase thea
 ## 2. Capacity Estimation
 
 > **Traffic estimates:** 3 billion monthly page views, sells 10 million tickets a month.
-> **Storage estimates:** 500 cities, on average each city has 10 cinemas, each with 300 seats, 3 shows daily.
+
+> **Storage estimates:**
+500 cities, on average each city has 10 cinemas, each with 300 seats, 3 shows daily.
 
 Let's assume each seat booking needs 50 bytes (IDs, NumberOfSeats, ShowID, MovieID, SeatNumbers, SeatStatus, Timestamp, etc) to store in the DB.
 We need to store information about movies and cinemas; assume another 50 bytes.
 
 So to store all data about all shows of all cinemas of all cities for a day
 
-```text
+```
         500 cities * 10 cinemas * 300 seats * 3 shows * (50 + 50) bytes = 450 MB / day
 ```
 To store data for 5 years, we'd need around
-```text
+```
     450 MB/day * 365 * 5 = 821.25 GB
 ```
 
 ## 3. System APIs
 Let's use REST APIs to expose the functionality of our service.
+
 
 ### Searching movies
 ```python
@@ -140,7 +144,7 @@ reserve_seats(
 ```
 
 Returns: (JSON)
-```text
+```
     The status of the reservation, which would be one of the following:
         1. Reservation Successful,
         2. Reservation Failed - Show Full
@@ -155,6 +159,7 @@ Returns: (JSON)
 4. A **User** can have multiple **Booking**s.
 
 &nbsp;
+
 
 ![](images/e_ticketing_db_design.svg)
 
@@ -178,11 +183,10 @@ Let's explore the workflow part where there are no seats available to reserve, b
 
 If seats are reserved successfully, the user has 5 minutes to pay for the reservation. After payment, booking is marked complete. If the user isn't able to pay within 5 minutes, all the reserved seats are freed from the reservation pool to become available to other users.
 
-### How we'll keep track of all active reservations that have not been booked yet, and keep track of waiting customers
+#### How do we keep track of all active reservations  that haven't been booked yet? and also keep track of waiting customers?
+We need two daemon services:
 
-We need two daemon services for this:
-
-#### a. Active Reservation Service
+**a. Active Reservation Service**
 
 This will keep track of all active reservations and remove expired ones from the system.
 
@@ -193,14 +197,10 @@ We can keep all the reservations of a show in memory in a [Linked Hashmap](https
 To store every reservation for every show, we can have a HashTable where the `key` = `ShowID` and `value` = Linked HashMap containing `BookingID` and creation `Timestamp`.
 
 In the DB,
-- We store reservation in the `Booking` table.
-
-- Expiry time will be in the Timestamp column.
-
-- The `Status` field will have a value of `Reserved(1)` and, as soon as a booking is complete, update the status to `Booked(2)`.
-
-- After status is changed, remove the reservation record from Linked HashMap of the relevant show.
-
+- we store reservation in the `Booking` table
+- expiry time will be in the Timestamp column.
+- The `Status` field will have a value of `Reserved(1)` and, as soon as a booking is complete, update the status to `Booked(2)`
+    - After status is changed, remove the reservation record from Linked HashMap of the relevant show.
 - When reservation expires, remove it from the Booking table or mark it `Expired(3)`, and remove it from memory as well.
 
 ActiveReservationService will work with the external Financial service to process user payments. When a booking is completed, or a reservation expires, WaitingUserService will get a signal so that any waiting customer can be served.
@@ -219,9 +219,9 @@ hash_table = {
 }
 ```
 
-#### b. Waiting User Service
+**b. Waiting User Service**
 
-- This daemon service will keep track of waiting users in a Linked HashMap or TreeMap.
+- This service will keep track of waiting users in a Linked HashMap or TreeMap.
 - To help us jump to any user in the list and remove them when they cancel the request.
 - Since it's a first-come-first-served basis, the head of the Linked HashMap would always point to the longest waiting user, so that whenever seats become available, we can serve users in a fair manner.
 
@@ -235,21 +235,22 @@ On the server, the Active Reservation Service keeps track of expiry of active co
 
 On the client, we will show a timer (for expiration time), which could be a little out of sync with the server. We can add a buffer of 5 seconds on the server to prevent the client from ever timing out after the server, which, if left unchecked, could prevent successful purchase.
 
-## 7. Concurrency
+
+# 7. Concurrency
 We need to handle concurrency, such that no 2 users are able to book the same seat.
 
 We can use transactions in SQL databases, isolating each transaction by locking the rows before we can update them. If we read rows, we'll get a write lock on the them so that they can't be updated by anyone else.
 
 Once the DB transaction is committed and successful, we can start tracking the reservation in the Active Reservation Service.
 
-## 8. Fault Tolerance
+# 8. Fault Tolerance
 If the two services crash, we can read all active reservations from the Booking table.
 
 Another option is to have a **master-slace configuration** so that, when the master crashes, the slave can take over. We are not storing the waiting users in the DB, so when Waiting User Service crashes, we don't have any means to recover the data unless we have a master-slave setup.
 
 We can also have the same master-slave setup for DBs to make them fault tolerant.
 
-## 9. Data Partitioning
+# 9. Data Partitioning
 Partitioning by MovieID will result in all Shows of a Movie being in a single server.
 For a hot movie, this could cause a lot of load on that server. A better approach would be to partition based on ShowID; this way, the load gets distributed among different servers.
 

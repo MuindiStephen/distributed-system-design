@@ -9,15 +9,15 @@ We plan to design a simpler version of Instagram, where a user can share photos 
 ## 1. Requirements and Goals of the System
 
 #### Functional requirements
-1. Users should be able to upload/download/view photos
-2. Users can perform searches baed on photo/video titles
-3. Users can follow other users
-4. The system should generate Newsfeed consisting top photos from all the people the user follows
+- Users should be able to upload/download/view photos
+- Users can perform searches baed on photo/video titles
+- Users can follow other users
+- The system should generate Newsfeed consisting top photos from all the people the user follows
 
 #### Non-functional requirements
-1. The service needs to be highly available
-2. The acceptable latency is 200ms for News Feed generation
-3. The system should be highly reliable; any uploaded photo/video should never be lost.
+- The service needs to be highly available
+- The acceptable latency is 200ms for News Feed generation
+- The system should be highly reliable; any uploaded photo/video should never be lost.
 
 ## 2. Capacity Estimation and Constraints
 
@@ -219,7 +219,7 @@ To improve the efficiency, we can pre-generate the News Feed and store it in a s
 **1. Pull**: Clients pull content from server on a regular/ or manually.
 Problems:
 - New data not showing until client issues a pull request
-- Most of the time pull requessts will result in empty response if there's no data. (Frustrating the user)
+- Most of the time pull requests will result in empty response if there's no data. (Frustrating the user)
 
 **2. Push:** Servers push new data to users as soon as it is available. Users maintain a long poll request with the server. A possible problem is, a user who follows a lot of people or a celebrity user who has millions of followers; the server will have to push lots of updates quite frequently, straining the server.
 
@@ -229,7 +229,7 @@ Problems:
 
 
 
-# 10. Cache and Load balancing
+## 10. Cache and Load balancing
 
 Our service will need a massive-scale photo delivery system to serve the globally distributed users.
 
@@ -241,9 +241,4 @@ For cache eviction, we can use Least Recently User (LRU), where we discard the l
 
 #### **How can we build a more intelligent cache?** 
 
-If we go with 80-20 rule, 20% of photo reads generates 80% of traffic. This means that certain photos are so popular that the majority of people view/search them. Therefore, we can try caching 20% of daily read volume of photos and metadata. 
-
-
-```python
-
-```
+If we go with 80-20 rule, 20% of photo reads generates 80% of traffic. This means that certain photos are so popular that the majority of people view/search them. Therefore, we can try caching 20% of daily read volume of photos and metadata.

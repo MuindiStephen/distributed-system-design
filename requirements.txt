@@ -1,21 +1,17 @@
-asn1crypto==0.24.0
-certifi==2024.7.4
-cffi==1.12.2
-chardet==3.0.4
-cryptography==42.0.4
-cycler==0.10.0
-idna==3.7
-kiwisolver==1.1.0
-libarchive-c==2.8
-pycosat==0.6.3
-pycparser==2.19
-pyOpenSSL==19.0.0
-pyparsing==2.4.0
-PySocks==1.6.8
-python-dateutil==2.8.0
-ruamel-yaml==0.15.46
-six==1.12.0
-torch==1.1.0
-tqdm==4.66.3
-urllib3==1.26.19
-pytest==5.3.1
+# Core testing
+pytest
+nbval
+
+# Common utilities & jupyter/nbval underlying dependencies
+six
+python-dateutil
+ipykernel # For executing notebooks
+nbformat  # For reading/writing notebook structure
+jupyter_core # Common core utilities for Jupyter
+# Network/Security - often pulled in by requests/urllib3 or similar
+certifi
+idna
+urllib3
+# cryptography might be needed by pyOpenSSL or other security aspects of web requests
+cryptography
+pyOpenSSL

@@ -1,4 +1,3 @@
-
 # Designing Youtube or Netflix
 Let's design a video sharing service like Youtube where users will be able to upload/view/search videos.
 
@@ -7,11 +6,11 @@ Similar Services: Netflix, Vimeo
 ## 1. Requirements and Goals of the System
 
 #### Functional Requirements:
-1. Users should be able to upload videos.
-2. Users should have ability to share and view videos.
-3. Users should be able to perform searches based on video titles.
-4. Service should have starts on videos, e.g likes/dislikes, no. of views, etc.
-5. Users should be able to add and view comments on videos
+- Users should be able to upload videos.
+- Users should have ability to share and view videos.
+- Users should be able to perform searches based on video titles.
+- Service should have starts on videos, e.g likes/dislikes, no. of views, etc.
+- Users should be able to add and view comments on videos
 
 
 #### Non-Functional Requirements:
@@ -109,12 +108,12 @@ A media stream (video chunk) from the given offset.
 
 ## 4. High Level Design
 At a high-level we would need the following components:
-1. **Processing Queue:**: Each uploaded video will be pushed to a processing queue ot be de-queued later for encoding, thumbnail generation, and storage.
-2. **Encoder:** To encode each uploaded video into multiple formats.
-3. **Thumbnails generator:** To generate thumbnails for each video.
-4. **Video and Thumbnail storage:** To store video and thumbnail files in some distributed file storage.
-5. **User DB:** To store user's info e.g name, email, address, etc.
-6. **Video metadata storage:** A metadata DB to store information about videos like title, its file path, uploading user, total views, likes, comments etc. 
+- **Processing Queue:**: Each uploaded video will be pushed to a processing queue ot be de-queued later for encoding, thumbnail generation, and storage.
+- **Encoder:** To encode each uploaded video into multiple formats.
+- **Thumbnails generator:** To generate thumbnails for each video.
+- **Video and Thumbnail storage:** To store video and thumbnail files in some distributed file storage.
+- **User DB:** To store user's info e.g name, email, address, etc.
+- **Video metadata storage:** A metadata DB to store information about videos like title, its file path, uploading user, total views, likes, comments etc.
 
 ![](images/hld_youtube.png)
 
@@ -139,7 +138,7 @@ For each video comment, we nneed to store:
 - CreatedAt
 
 #### User data storage - MySQL
-* UserID, Name, email, address, age, registration details etc
+- UserID, Name, email, address, age, registration details etc
 
 ## 6. Detailed Component Design
 The service will be read-heavy, since more people are viewing than uploading videos. We'll focus on building a system that can retrieve videos quickly. We can expect a read:write ratio of 200:1.
@@ -154,8 +153,8 @@ For metadata, we can have a master-slave config where writes go to master first 
 #### Where would thumbnails be stored?
 There will be a lot more thumbnails than videos. Assume each video has 5 thumbnails, we need to have a very efficient storage system that'll serve huge read traffic.
 Two considerations:
-1. Thumbnails are small files, max 5KB each.
-2. Read traffic for thumbnails will be huge compared to videos. Users will be watching one video at a time, but they might be looking at a page that has 20 thumbnails of other videos.
+- Thumbnails are small files, max 5KB each.
+- Read traffic for thumbnails will be huge compared to videos. Users will be watching one video at a time, but they might be looking at a page that has 20 thumbnails of other videos.
 
 Let's evaluate storing thumbnails on disk.
 Given the huge number of files, we have to perform a lot of seeks to different locations on the disk to read these files. This is quite inefficient and will result in higher latencies.
@@ -197,11 +196,11 @@ We can further improve our performance by introducing a cache to store hot video
 With a huge number of users uploading massive amounts of video data, our service will have to deal with widspread video duplication. Duplicate videos often differ in aspect ratios or encodings, can contain overlays or additional borders, or can be excerpts from a longer original video.
 
 Having duplicate videos can have the following impact on many levels:
-1. Data Storage: we'd waste storage by keeping multiple copies of the same video.
-2. Caching: They'll degrade cache efficiency by taking up space tht could be used for unique content.
-3. Network usage: They'll increase data sent over the network to in-network caching systems.
-4. Energy consumption: Higher storage, inefficient cache and high network usage could result in energy wastage.
-5. Effect to our user: Duplicate search results, longer video startup times, and interrupted streaming.
+- Data Storage: we'd waste storage by keeping multiple copies of the same video.
+- Caching: They'll degrade cache efficiency by taking up space tht could be used for unique content.
+- Network usage: They'll increase data sent over the network to in-network caching systems.
+- Energy consumption: Higher storage, inefficient cache and high network usage could result in energy wastage.
+- Effect to our user: Duplicate search results, longer video startup times, and interrupted streaming.
 
 #### How do we implement deduplication?
 Deduplication should happen when a user is uploading a video as compared to post-processing it to find videos later. Inline deduplication will save us a lot of resources that could be used to encode, transfer, and store the duplicate copy of the video. As soon as any user starts uploading a vidoe, our service can run video matching algorithms to find duplications. Such algorithms include:

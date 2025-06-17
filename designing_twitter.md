@@ -1,4 +1,3 @@
-
 # Designing Twitter
 
 Twitter is an online social networking service where users post and read short 140-character messages called "tweets". Registered Users can post and read tweets, but those not registered can only read them. 
@@ -7,24 +6,24 @@ Twitter is an online social networking service where users post and read short 1
 ## 1. Requirements and System Goals
 
 ### Functional Requirements
-1. Users should be able to post new tweets.
-2. A user should be able to follow other users.
-3. Users should be able to mark tweets as favorites.
-4. Tweets can contain photos and videos.
-5. A user should have a timeline consting of top tweets from all the people the user follows.
+- Users should be able to post new tweets.
+- A user should be able to follow other users.
+- Users should be able to mark tweets as favorites.
+- Tweets can contain photos and videos.
+- A user should have a timeline consting of top tweets from all the people the user follows.
 
 ### Non-functional Requirements
-1. Our service needs to be highly available.
-2. Acceptance latency of the sytstem is 200ms for timeline generation.
-3. Consistency can take a hit (in the interest of availability); if user doesn't see a tweet for a while, it should be fine.
+- Our service needs to be highly available.
+- Acceptance latency of the sytstem is 200ms for timeline generation.
+- Consistency can take a hit (in the interest of availability); if user doesn't see a tweet for a while, it should be fine.
 
 ### Extended Requirements
-1. Searching tweets.
-2. Replying to a tweet.
-3. Trending topics - current hot topics.
-4. Tagging other users.
-5. Tweet notification.
-6. Suggestions on who to follow.
+- Searching tweets.
+- Replying to a tweet.
+- Trending topics - current hot topics.
+- Tagging other users.
+- Tweet notification.
+- Suggestions on who to follow.
 
 ## Capacity Estimation and Constraints
 
@@ -110,7 +109,7 @@ We need to store data about users, their tweets, their favorite tweets, and peop
 
 ![](images/twitter_db_schema.svg)
 
-For choosing between SQL or NoSQL, check out [Designing Instagram](designing_instagram.md)
+For choosing between SQL or NoSQL, check out Designing Instagram from the README.
 
 ## 6. Data Sharding
 
@@ -123,8 +122,8 @@ We can try storing a user's data on one server. While storing:
 - While querying for their data, we can ask the hash function where to find it and read it from there. 
 
 Issues:
-1. What if a user becomes hot? There will be lots of queries on the server holding that user. This high load will affect the service's performance.
-2. Over time, some users will have more data compared to others. Maintaining a uniform distribution of growing data is quite difficult. 
+- What if a user becomes hot? There will be lots of queries on the server holding that user. This high load will affect the service's performance.
+- Over time, some users will have more data compared to others. Maintaining a uniform distribution of growing data is quite difficult.
 
 #### Sharding based on TweetID
 - Hash function maps each TweetID to a random server where we store that tweet.
@@ -146,10 +145,10 @@ Issues with this approach:
 
 #### Sharding based on Tweet creation time
 
-Storing tweets based on creation timestamp will give help us to fetch all top tweets quickly and we only have to query a very small set of servers.
+Storing tweets based on creation timestamp will help us to fetch all top tweets quickly and we only have to query a very small set of database servers.
 
 Issues:
-- Traffic load won't be distributed. e.g when writing, all new tweets will be going to one server, and remaining servers sit idle. When reading, server holding the latest data will have high load as compared to servers holding old data.
+- Traffic load won't be distributed. e.g when writing, all new tweets will be going to one DB server, and remaining DB servers sit idle. When reading, a database server holding the latest data will have high load as compared to servers holding old data.
 
 #### Sharding by TweetID + Tweet creation time
 Each tweetID should be universally unique and contain a timestamp.
@@ -158,7 +157,7 @@ We can use epoch time for this.
 First part of TweetID will be a timestamp, second part an auto-incrementing number. We can then figure out the shard number from this TweetId and store it there.
 
 What could be the size of our TweetID?
-If our epoch time started today, the number of bits we need to store the numnber of seconds for the next 50 years:
+If our epoch time started today, the number of bits we need to store the number of seconds for the next 50 years:
 
 ```
 Number of seconds for the next 50 years:
@@ -180,15 +179,13 @@ Since on average we expect 1150 new tweets every second i.e
 we can allocate 17 bits to store auto incremented sequence. This makes our tweetID 48 bits long. 
 
 Every second, we can store 2^17(130k) new tweets. 
-We can reset our auto incrementing sequence every second. For fault tolerance and better performance, we can have two DB serves to generate auto-incrementing keys; one odd numbers and one even numbered keys.
+We can reset our auto incrementing sequence every second. For fault tolerance and better performance, we can have two DB servers to generate auto-incrementing keys; one odd numbers and one even numbered keys.
 
 If we assume our current epoch seconds begins now, TweetIDs will look like this:
 
 
 ```python
-from datetime import datetime
-epoch = int(datetime.now().timestamp())
-
+epoch = 1571691220
 print('epoch - autoincrement')
 for i in range(1,5):
     print(f'{epoch}-{i:06}')
@@ -243,12 +240,12 @@ We can add Load balancing layer at 3 places:
 2. Between app servers and DB replication servers
 3. Between Aggregation servers and Cache servers
 
-We can adopt a simple round robin approach to distribure incoming requests equally among servers.
+We can adopt a simple round robin approach to distribute incoming requests equally among servers.
 Benefits of this LB approach:
 - Simple to implement with no overhead
-- If a server is dead, LB will take it our for the rotation and will stop sending any traffic to it.
+- If a server is dead, LB will take it out from the rotation and will stop sending any traffic to it.
 
-Problem with Round Robin is that it doesn't know if a server is overloaded with requests or slow. It won't stop sending requests to that server. To fix this, a moe intelligent LB solution can be placed that periodically queries backend server about their load and adjusts traffic to it based on that. 
+> Problem with Round Robin is that it doesn't know if a server is overloaded with requests or if it's slow. It won't stop sending requests to that server. To fix this, the LB can periodically query the backend server about its load and adjusts traffic to it based on that.
 
 ## 9. Extended Requirements
 
